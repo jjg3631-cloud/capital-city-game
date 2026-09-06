@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>즐거운 사회 형성평가</title>
+
+<style>
+
+* {
+box-sizing: border-box;
+}
+
+body {
+margin: 0;
+font-family: Arial, "Malgun Gothic", sans-serif;
+background: linear-gradient(135deg, #dff6ff, #fff7d6);
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.game {
+width: 95%;
+max-width: 650px;
+background: white;
+border-radius: 30px;
+padding: 30px 25px;
+box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+text-align: center;
+}
+
+h1 {
+color: #315c8c;
+}
+
+.subtitle {
+color: #777;
+margin-bottom: 20px;
+}
+
+.earth-area {
+height: 180px;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.earth {
+width: 140px;
+height: 140px;
+border-radius: 50%;
+background: #69c7ff;
+border: 7px solid #3c98d1;
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 55px;
+box-shadow: inset -15px -15px 0 rgba(0,0,0,0.08);
+}
+
+.face {
+z-index: 2;
+}
+
+.question-number {
+color: #888;
+}
+
+.question {
+font-size: 24px;
+font-weight: bold;
+margin: 20px 0;
+}
+
+.answers {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 12px;
+}
+
+.answer-btn {
+border: none;
+border-radius: 18px;
+padding: 17px 10px;
+background: #f0f6ff;
+color: #315c8c;
+font-size: 17px;
+font-weight: bold;
+cursor: pointer;
+}
+
+.result {
+display: none;
+}
+
+.score {
+font-size: 55px;
+font-weight: bold;
+color: #ff8c42;
+margin: 20px;
+}
+
+.message {
+font-size: 21px;
+font-weight: bold;
+margin-bottom: 25px;
+}
+
+.restart {
+border: none;
+background: #315c8c;
+color: white;
+padding: 15px 30px;
+border-radius: 18px;
+font-size: 17px;
+font-weight: bold;
+cursor: pointer;
+}
+
+.correct {
+animation: happy 0.7s ease;
+}
+
+@keyframes happy {
+0% {transform:scale(1);}
+50% {transform:scale(1.25) rotate(8deg);}
+100% {transform:scale(1);}
+}
+
+.wrong {
+animation: sad 0.6s ease;
+}
+
+@keyframes sad {
+0% {transform:translateX(0);}
+25% {transform:translateX(-10px);}
+50% {transform:translateX(10px);}
+75% {transform:translateX(-10px);}
+100% {transform:translateX(0);}
+}
+
+.jump {
+animation: jump 1s infinite;
+}
+
+@keyframes jump {
+0% {transform:translateY(0);}
+30% {transform:translateY(-70px) rotate(-10deg);}
+60% {transform:translateY(0) rotate(10deg);}
+80% {transform:translateY(-35px);}
+100% {transform:translateY(0);}
+}
+
+.explode {
+animation: explode 1s forwards;
+}
+
+@keyframes explode {
+0% {transform:scale(1);opacity:1;}
+50% {transform:scale(2);opacity:.7;}
+100% {transform:scale(0);opacity:0;}
+}
+
+.explosion {
+display:none;
+position:fixed;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+font-size:130px;
+z-index:100;
+}
+
+.explosion.show {
+display:block;
+}
+
+@media(max-width:500px) {
+
+.answers {
+grid-template-columns:1fr;
+}
+
+.question {
+font-size:20px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="game">
+
+<div id="quizScreen">
+
+<h1>🌏 즐거운 사회 형성평가</h1>
+
+<div class="subtitle">
+지구와 함께 아시아 국가의 수도를 찾아보자!
+</div>
+
+<div class="earth-area">
+
+<div class="earth" id="earth">
+
+<div class="face" id="face">
+😊
+</div>
+
+</div>
+
+</div>
+
+<div class="question-number"
+id="questionNumber">
+1 / 5
+</div>
+
+<div class="question"
+id="question">
+대한민국의 수도는 어디일까요?
+</div>
+
+<div class="answers"
+id="answers">
+</div>
+
+</div>
+
+<div class="result"
+id="resultScreen">
+
+<h1>🌏 즐거운 사회 형성평가</h1>
+
+<div class="earth-area">
+
+<div class="earth"
+id="resultEarth">
+
+<div class="face"
+id="resultFace">
+🤩
+</div>
+
+</div>
+
+</div>
+
+<h2>퀴즈가 끝났어요!</h2>
+
+<div class="score"
+id="score">
+0 / 5
+</div>
+
+<div class="message"
+id="message">
+</div>
+
+<button class="restart"
+onclick="restartGame()">
+다시 도전하기 🔄
+</button>
+
+</div>
+
+</div>
+
+<div class="explosion"
+id="explosion">
+💥
+</div>
+
+<script>
+
+const questions = [
+
+{
+question:"대한민국의 수도는 어디일까요?",
+answer:"서울",
+choices:["서울","도쿄","베이징","방콕"]
+},
+
+{
+question:"일본의 수도는 어디일까요?",
+answer:"도쿄",
+choices:["서울","도쿄","마닐라","하노이"]
+},
+
+{
+question:"중국의 수도는 어디일까요?",
+answer:"베이징",
+choices:["울란바토르","베이징","자카르타","서울"]
+},
+
+{
+question:"몽골의 수도는 어디일까요?",
+answer:"울란바토르",
+choices:["울란바토르","타슈켄트","도쿄","베이징"]
+},
+
+{
+question:"필리핀의 수도는 어디일까요?",
+answer:"마닐라",
+choices:["하노이","마닐라","서울","방콕"]
+}
+
+];
+
+let currentQuestion=0;
+let score=0;
+
+const questionNumber=
+document.getElementById("questionNumber");
+
+const question=
+document.getElementById("question");
+
+const answers=
+document.getElementById("answers");
+
+const face=
+document.getElementById("face");
+
+const earth=
+document.getElementById("earth");
+
+const quizScreen=
+document.getElementById("quizScreen");
+
+const resultScreen=
+document.getElementById("resultScreen");
+
+const resultEarth=
+document.getElementById("resultEarth");
+
+const resultFace=
+document.getElementById("resultFace");
+
+const scoreText=
+document.getElementById("score");
+
+const message=
+document.getElementById("message");
+
+const explosion=
+document.getElementById("explosion");
+
+function showQuestion(){
+
+const q=questions[currentQuestion];
+
+questionNumber.textContent=
+(currentQuestion+1)+" / "+questions.length;
+
+question.textContent=q.question;
+
+answers.innerHTML="";
+
+const choices=
+[...q.choices]
+.sort(()=>Math.random()-0.5);
+
+choices.forEach(choice=>{
+
+const button=
+document.createElement("button");
+
+button.className="answer-btn";
+
+button.textContent=choice;
+
+button.onclick=
+()=>checkAnswer(button,choice);
+
+answers.appendChild(button);
+
+});
+
+face.textContent="😊";
+
+}
+
+function checkAnswer(button,choice){
+
+const correct=
+questions[currentQuestion].answer;
+
+const buttons=
+document.querySelectorAll(".answer-btn");
+
+buttons.forEach(btn=>{
+btn.disabled=true;
+});
+
+if(choice===correct){
+
+score++;
+
+button.style.background="#b9f6ca";
+
+face.textContent="😆";
+
+earth.classList.add("correct");
+
+}
+
+else{
+
+button.style.background="#ffd0d0";
+
+face.textContent="😢";
+
+earth.classList.add("wrong");
+
+buttons.forEach(btn=>{
+
+if(btn.textContent===correct){
+
+btn.style.background="#b9f6ca";
+
+}
+
+});
+
+}
+
+setTimeout(()=>{
+
+earth.classList.remove("correct");
+earth.classList.remove("wrong");
+
+},700);
+
+setTimeout(()=>{
+
+currentQuestion++;
+
+if(currentQuestion<questions.length){
+
+showQuestion();
+
+}
+
+else{
+
+showResult();
+
+}
+
+},1000);
+
+}
+
+function showResult(){
+
+quizScreen.style.display="none";
+
+resultScreen.style.display="block";
+
+scoreText.textContent=
+score+" / "+questions.length;
+
+const wrongCount=
+questions.length-score;
+
+if(score>=3){
+
+resultFace.textContent="🤩";
+
+message.textContent=
+"대단해요! 지구가 신나서 점프하고 있어요! 🌍🎉";
+
+resultEarth.classList.add("jump");
+
+}
+
+else if(wrongCount>=3){
+
+resultFace.textContent="😱";
+
+message.textContent=
+"앗! 지구가 충격을 받아 폭발했어요! 💥";
+
+resultEarth.classList.add("explode");
+
+setTimeout(()=>{
+
+explosion.classList.add("show");
+
+},500);
+
+}
+
+}
+
+function restartGame(){
+
+currentQuestion=0;
+
+score=0;
+
+explosion.classList.remove("show");
+
+resultEarth.classList.remove("jump");
+resultEarth.classList.remove("explode");
+
+resultScreen.style.display="none";
+
+quizScreen.style.display="block";
+
+showQuestion();
+
+}
+
+showQuestion();
+
+</script>
+
+</body>
+</html>
